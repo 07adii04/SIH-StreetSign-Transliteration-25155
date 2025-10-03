@@ -1,0 +1,3 @@
+streamlit
+# We will use 'google-cloud-vision' for OCR, but will install it later
+# We will use 'indic-transliteration' for core logic, but will install it later
