@@ -4,8 +4,8 @@ streamlit
 # Image handling
 Pillow
 
-# OCR (Primary choice for high accuracy with Indic scripts)
-google-cloud-vision
+# CORE OCR: Open Source (Free)
+easyocr
 
 # Indic script transliteration (Core logic)
 indic-transliteration
