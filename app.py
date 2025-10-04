@@ -1,10 +1,12 @@
 # app.py
+# Streamlit User Interface
 
 import streamlit as st
-# Import core functions from your logic file
+# 1. Import core function from your logic file
 from src.transliterator import detect_and_extract_text 
-# Import sanscript to use the script constants for selection
-from indic_transliteration import sanscript
+# 2. Import sanscript to use the script constants for selection
+from indic_transliteration import sanscript 
+
 # --- Page Setup ---
 st.set_page_config(
     page_title="SIH 25155 Transliteration Tool",
@@ -15,8 +17,7 @@ st.set_page_config(
 st.title("🛣️ Transliterations Tool for Street Signs (SIH 25155)")
 st.caption("A tool for accurate script-to-script conversion of Indic street signs.")
 
-# --- File Uploader and Target Script Selection (Placeholder for now) ---
-
+# --- File Uploader and Target Script Selection ---
 col1, col2 = st.columns(2)
 
 with col1:
@@ -28,7 +29,7 @@ with col1:
 
 with col2:
     st.header("2. Select Target Script")
-    # This list will be used properly in Phase C
+    # Mapping user-friendly names to sanscript constants
     script_options = {
         "Telugu (తెలుగు)": sanscript.TELUGU,
         "Bengali (বাংলা)": sanscript.BENGALI,
@@ -39,7 +40,6 @@ with col2:
         "Convert to which Indian script?",
         list(script_options.keys())
     )
-    # Target scheme is needed to satisfy the placeholder logic in Phase C
     TARGET_SCHEME = script_options[target_script_name] 
 
 
