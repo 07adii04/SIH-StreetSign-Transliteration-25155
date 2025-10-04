@@ -1,3 +1,11 @@
-streamlit
-# We will use 'google-cloud-vision' for OCR, but will install it later
-# We will use 'indic-transliteration' for core logic, but will install it later
+# Web framework for the User Interface
+streamlit==1.26.1
+
+# Image handling (used by Streamlit and for pre-processing)
+Pillow==10.2.0
+
+# OCR (Primary choice for high accuracy with Indic scripts)
+google-cloud-vision==3.7.3
+
+# Indic script transliteration (Core logic)
+indic-transliteration==2.3.58

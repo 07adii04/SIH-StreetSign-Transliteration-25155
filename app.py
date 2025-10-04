@@ -1,4 +1,6 @@
 import streamlit as st
+# Placeholder import for the logic file we will create in the next step
+# from src.transliterator import detect_and_extract_text, transliterate_text 
 
 # Set up the basic configuration for the page
 st.set_page_config(
@@ -8,7 +10,7 @@ st.set_page_config(
 
 # --- Title and Project Info ---
 st.title("🛣️ Transliterations Tool for Street Signs (SIH 25155)")
-st.caption("Initial repository structure set up.")
+st.caption("Initial repository structure set up. Ready for implementation.")
 
 # --- File Uploader Placeholder ---
 st.header("1. Upload Street Sign Image")
@@ -23,7 +25,7 @@ if uploaded_file is not None:
     # --- Processing Button Placeholder ---
     if st.button("Start Transliteration"):
         with st.spinner('Extracting text and performing transliteration...'):
-            # This is where the logic from 'transliterator.py' will be called
+            # Placeholder for future logic call
             st.success("Processing complete (Placeholder Result)")
             st.subheader("Transliterated Text (Output)")
-            st.code("नये दिल्ली (Devanagari) -> న్యి ఢిల్లి (Telugu)", language="text")
+            st.code("This is a placeholder result: The code will go here.", language="text")
