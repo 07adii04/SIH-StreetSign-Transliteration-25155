@@ -4,8 +4,7 @@ import streamlit as st
 # Import core functions from your logic file
 from src.transliterator import detect_and_extract_text 
 # Import sanscript to use the script constants for selection
-from indic_transliteration.sanscript import sanscript 
-
+from indic_transliteration import sanscript
 # --- Page Setup ---
 st.set_page_config(
     page_title="SIH 25155 Transliteration Tool",
