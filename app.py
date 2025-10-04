@@ -30,7 +30,7 @@ with col1:
     
     # Display the uploaded image immediately
     if uploaded_file is not None:
-        st.image(uploaded_file, caption='Uploaded Image', use_column_width=True)
+        st.image(uploaded_file, caption='Uploaded Image', use_container_width=True)
 
 # --- Column 2: Target Script Selection & Processing ---
 with col2:
