@@ -93,8 +93,19 @@ with col2:
                     )
 
                     # 2. CSV Download
-                    csv_data = io.BytesIO(("Extracted Text,Transliterated Text\n"
-                                          f"\"{ocr_result['full_text'].replace('\"', '""')}\",\"{trans_result['result'].replace('\"', '""')}\"").encode("utf-8"))
+                      # Function to escape quotes for CSV safely
+                    def escape_for_csv(text):
+                        # Replace double quotes with double-double quotes for standard CSV escaping
+                        return text.replace('"', '""')
+
+                    csv_content = (
+                        "Extracted Text,Transliterated Text\n"
+                        f"\"{escape_for_csv(ocr_result['full_text'])}\","
+                        f"\"{escape_for_csv(trans_result['result'])}\""
+                    )
+                    
+                    csv_data = io.BytesIO(csv_content.encode("utf-8"))
+                    
                     st.download_button(
                         label="⬇️ Download as CSV",
                         data=csv_data,
