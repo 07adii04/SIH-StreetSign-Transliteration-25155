@@ -1,11 +1,4 @@
-# Web framework for the User Interface
 streamlit
-
-# Image handling
 Pillow
-
-# CORE OCR: Open Source (Free)
-easyocr
-
-# Indic script transliteration (Core logic)
+pytesseract
 indic-transliteration
