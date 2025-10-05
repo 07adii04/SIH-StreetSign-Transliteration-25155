@@ -1,5 +1,5 @@
 # src/transliterator.py
-# Core Logic using Pytesseract (FREE OCR) and Indic-Transliteration
+# Core Logic using Pytesseract (Tesseract OCR) and Indic-Transliteration
 
 import pytesseract
 from PIL import Image
@@ -7,8 +7,13 @@ import io
 from indic_transliteration import sanscript, detect
 from indic_transliteration.sanscript import SchemeMap, SCHEMES, transliterate
 
-# Optional: Set this path if running locally (update if needed)
-# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# --- FINAL FIX: Explicitly set the Tesseract command path for Streamlit Cloud ---
+# This path is standard on the Debian-based servers used by Streamlit Cloud.
+try:
+    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+except Exception:
+    # Allows local testing to proceed if the system path is already correct
+    pass
 
 def detect_and_extract_text(image_bytes):
     """
@@ -16,15 +21,17 @@ def detect_and_extract_text(image_bytes):
     """
     try:
         image = Image.open(io.BytesIO(image_bytes))
+        
+        # Use hin+eng language packs
         full_text = pytesseract.image_to_string(image, lang='hin+eng')
 
         return {
             "full_text": full_text.strip() if full_text else None,
-            "lang_code": "Tesseract (hin+eng)"
+            "lang_code": "Tesseract (hin+eng)" 
         }
 
     except pytesseract.TesseractNotFoundError:
-        return {"full_text": None, "lang_code": "Tesseract not found."}
+        return {"full_text": None, "lang_code": "Tesseract not found (PATH error on server)."}
     except Exception as e:
         return {"full_text": None, "lang_code": f"Tesseract error: {e}"}
 
@@ -34,14 +41,13 @@ def transliterate_text(text, target_scheme):
     Detects the source Indic script and transliterates the text to the target scheme.
     """
     try:
-        # --- Try to detect the source script ---
         source_scheme = detect.detect(text)
 
-        # Fallback: If detection fails, assume Devanagari (Hindi)
+        # Fallback: If detection fails, assume Devanagari
         if source_scheme is None:
             source_scheme = sanscript.DEVANAGARI
 
-        # Skip transliteration for plain English text
+        # Skip transliteration for Roman (English) text
         if source_scheme in [sanscript.HK, sanscript.IAST, sanscript.ITRANS]:
             return {
                 "result": text,

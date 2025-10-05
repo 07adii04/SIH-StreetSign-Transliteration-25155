@@ -28,9 +28,10 @@ with col1:
     )
 
     if uploaded_file:
+        # NOTE: Using use_container_width=True is correct, as requested by Streamlit warnings
         st.image(uploaded_file, caption="Uploaded Image", use_container_width=True)
 
-# --- Column 2: Script Selection ---
+# --- Column 2: Script Selection & Processing ---
 with col2:
     st.header("2. Select Target Script")
 
@@ -58,7 +59,7 @@ with col2:
             image_bytes = uploaded_file.getvalue()
 
             # --- PHASE 1: OCR ---
-            with st.spinner("🔍 Phase 1: Extracting text using EasyOCR..."):
+            with st.spinner("🔍 Phase 1: Extracting text using Tesseract..."):
                 ocr_result = detect_and_extract_text(image_bytes)
 
             if ocr_result["full_text"]:
@@ -81,7 +82,7 @@ with col2:
                     st.code(trans_result["result"], language="text")
 
                     # --- DOWNLOAD SECTION ---
-                    st.markdown("### 💾 Download Result")
+                    # 1. TXT Download
                     txt_data = io.BytesIO(trans_result["result"].encode("utf-8"))
                     st.download_button(
                         label="⬇️ Download as TXT",
@@ -91,8 +92,9 @@ with col2:
                         use_container_width=True
                     )
 
+                    # 2. CSV Download
                     csv_data = io.BytesIO(("Extracted Text,Transliterated Text\n"
-                                            f"\"{ocr_result['full_text']}\",\"{trans_result['result']}\"").encode("utf-8"))
+                                          f"\"{ocr_result['full_text'].replace('\"', '""')}\",\"{trans_result['result'].replace('\"', '""')}\"").encode("utf-8"))
                     st.download_button(
                         label="⬇️ Download as CSV",
                         data=csv_data,
