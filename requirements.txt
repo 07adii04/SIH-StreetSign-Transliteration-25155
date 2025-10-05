@@ -1,4 +1,7 @@
 streamlit
-Pillow
-pytesseract
+easyocr
+torch
+torchvision
+pillow
+numpy
 indic-transliteration
