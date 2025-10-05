@@ -92,8 +92,7 @@ with col2:
                         use_container_width=True
                     )
 
-                    # 2. CSV Download
-                      # Function to escape quotes for CSV safely
+                   # Function to escape quotes for CSV safely
                     def escape_for_csv(text):
                         # Replace double quotes with double-double quotes for standard CSV escaping
                         return text.replace('"', '""')
