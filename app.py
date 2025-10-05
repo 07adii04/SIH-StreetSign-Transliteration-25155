@@ -30,7 +30,7 @@ with col1:
     )
 
     if uploaded_file:
-        st.image(uploaded_file, caption="Uploaded Image", use_column_width="auto")
+        st.image(uploaded_file, caption="Uploaded Image", use_container_width=True)
 # --- Column 2: Script Selection & Processing ---
 with col2:
     st.header("2. Select Target Script")
