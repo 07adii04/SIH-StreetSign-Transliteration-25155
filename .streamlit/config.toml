@@ -1,0 +1,4 @@
+[server]
+# This limits the server to a single thread during build.
+# It prevents memory overload when installing large libraries like PyTorch.
+maxThreads = 1
