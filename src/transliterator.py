@@ -20,7 +20,7 @@ def detect_and_extract_text(image_bytes):
 
         return {
             "full_text": full_text.strip() if full_text else None,
-            "lang_code": "EasyOCR (hin+eng)"
+            "lang_code": "Tesseract (hin+eng)"
         }
 
     except pytesseract.TesseractNotFoundError:
