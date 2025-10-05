@@ -1,60 +1,60 @@
 # src/transliterator.py
-# Core Logic: OCR (EasyOCR) + Transliteration (indic-transliteration)
+# Core Logic using Pytesseract (FREE OCR) and Indic-Transliteration
 
-import io
+import pytesseract
 from PIL import Image
-import numpy as np
-import easyocr
+import io
 from indic_transliteration import sanscript, detect
 from indic_transliteration.sanscript import SchemeMap, SCHEMES, transliterate
 
+# Optional: Set this path if running locally (update if needed)
+# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 def detect_and_extract_text(image_bytes):
     """
-    Uses EasyOCR to extract text from uploaded street sign image.
-    Supports Hindi + English for Indian signage.
+    Uses Pytesseract to detect and extract text from an image, enabling Indic language support.
     """
     try:
-        reader = easyocr.Reader(['hi', 'en'], gpu=False)
         image = Image.open(io.BytesIO(image_bytes))
-        result = reader.readtext(np.array(image), detail=0)
-        full_text = " ".join(result)
+        full_text = pytesseract.image_to_string(image, lang='hin+eng')
 
         return {
             "full_text": full_text.strip() if full_text else None,
-            "lang_code": "EasyOCR (hi+en)"
+            "lang_code": "EasyOCR (hin+eng)"
         }
 
+    except pytesseract.TesseractNotFoundError:
+        return {"full_text": None, "lang_code": "Tesseract not found."}
     except Exception as e:
-        return {"full_text": None, "lang_code": f"OCR Error: {e}"}
+        return {"full_text": None, "lang_code": f"Tesseract error: {e}"}
 
 
 def transliterate_text(text, target_scheme):
     """
-    Detects the source script and transliterates it into the target script.
+    Detects the source Indic script and transliterates the text to the target scheme.
     """
     try:
-        if not text or not text.strip():
-            return {
-                "result": "",
-                "source_script": None,
-                "target_script": None,
-                "error": "Empty text, nothing to transliterate."
-            }
-
+        # --- Try to detect the source script ---
         source_scheme = detect.detect(text)
 
-        if source_scheme in [sanscript.HK, sanscript.IAST]:
+        # Fallback: If detection fails, assume Devanagari (Hindi)
+        if source_scheme is None:
+            source_scheme = sanscript.DEVANAGARI
+
+        # Skip transliteration for plain English text
+        if source_scheme in [sanscript.HK, sanscript.IAST, sanscript.ITRANS]:
             return {
                 "result": text,
-                "source_script": "Roman (Latin / English)",
+                "source_script": "Roman (English)",
                 "target_script": str(target_scheme),
                 "error": None
             }
 
+        # --- Perform transliteration ---
         transliterated_text = transliterate(
             data=text,
-            sch_map=SchemeMap(SCHEMES[source_scheme], SCHEMES[target_scheme])
+            _from=source_scheme,
+            _to=target_scheme
         )
 
         return {
