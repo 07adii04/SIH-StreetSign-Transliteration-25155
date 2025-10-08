@@ -1,90 +1,98 @@
-# app.py
-# Streamlit UI for SIH PS 25155: Street Sign Transliteration Tool
-
 import streamlit as st
-import io
-import requests
-from streamlit_copy_button import copy_button
 from src.transliterator import detect_and_extract_text, transliterate_text
 from indic_transliteration import sanscript
 
-# --- PAGE SETUP ---
-st.set_page_config(page_title="Indic Transliteration Tool", page_icon="🛣️", layout="wide")
+# --- Streamlit Page Config ---
+st.set_page_config(
+    page_title="Street Sign Transliteration Tool",
+    page_icon="🪧",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-EXAMPLE_IMAGE_URL = "https://raw.githubusercontent.com/Ankit-Muran/Indian-Sign-Board-Datasets/main/Hindi/hi_10.jpeg"
+# --- App Title and Description ---
+st.title("🪧 Street Sign Transliteration Tool")
+st.caption("A lightweight OCR + Transliteration web app built with Streamlit & EasyOCR.")
 
-# --- TITLE ---
-st.title("Street Sign Transliteration Tool")
-st.caption("Smart India Hackathon 25155 | OCR + Indic Transliteration")
+st.markdown("""
+Upload an **image of a street sign**, and this tool will:
+1. 🧠 Detect and extract text from the image using **EasyOCR**
+2. 🔡 Automatically detect the script and transliterate it into your selected language
+""")
 
-with st.expander("ℹ️ About this Project"):
-    st.write("""
-        This tool extracts text from street sign images using **EasyOCR**
-        and converts it into various Indic scripts using **indic-transliteration**.
-        
-         **Tech Stack:**
-        - Python, Streamlit
-        - EasyOCR (for multilingual OCR)
-        - Indic Transliteration (for script conversion)
-    """)
+# --- Sidebar for Configuration ---
+st.sidebar.header("⚙️ Settings")
 
-# --- LAYOUT ---
-col1, col2 = st.columns(2)
+# Supported target transliteration schemes
+TARGET_SCHEMES = {
+    "English (IAST)": sanscript.ITRANS,
+    "Devanagari (Hindi)": sanscript.DEVANAGARI,
+    "Gujarati": sanscript.GUJARATI,
+    "Tamil": sanscript.TAMIL,
+    "Telugu": sanscript.TELUGU,
+    "Bengali": sanscript.BENGALI,
+    "Gurmukhi (Punjabi)": sanscript.GURMUKHI,
+}
 
-# --- LEFT COLUMN: IMAGE INPUT ---
-with col1:
-    st.header("1️⃣ Upload Street Sign Image")
-    uploaded_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"])
+target_lang = st.sidebar.selectbox(
+    "Select Target Script for Transliteration",
+    list(TARGET_SCHEMES.keys())
+)
 
-    if st.button("📸 Try Example"):
-        try:
-            response = requests.get(EXAMPLE_IMAGE_URL, timeout=8)
-            response.raise_for_status()
-            uploaded_file = io.BytesIO(response.content)
-            st.success("✅ Example loaded successfully!")
-        except requests.exceptions.RequestException:
-            st.error("⚠️ Failed to load example image.")
+st.sidebar.markdown("---")
+st.sidebar.info("💡 Tip: The first OCR run may take ~1 minute (model download). Subsequent runs are instant!")
 
-    if uploaded_file:
-        st.image(uploaded_file, caption="Uploaded Image", use_container_width=True)
+# --- File Uploader ---
+uploaded_file = st.file_uploader("📸 Upload a Street Sign Image", type=["jpg", "jpeg", "png"])
 
-# --- RIGHT COLUMN: SCRIPT SELECTION ---
-with col2:
-    st.header("2️⃣ Select Target Script")
+if uploaded_file is not None:
+    image_bytes = uploaded_file.read()
 
-    scripts = {
-        "Devanagari (देवनागरी)": sanscript.DEVANAGARI,
-        "Bengali (বাংলা)": sanscript.BENGALI,
-        "Gurmukhi (ਗੁਰਮੁਖੀ)": sanscript.GURMUKHI,
-        "Gujarati (ગુજરાતી)": sanscript.GUJARATI,
-        "Tamil (தமிழ்)": sanscript.TAMIL,
-        "Telugu (తెలుగు)": sanscript.TELUGU,
-    }
+    # Display uploaded image preview
+    st.image(image_bytes, caption="Uploaded Image", use_container_width=True)
 
-    target_script_name = st.selectbox("Convert to:", list(scripts.keys()))
-    target_scheme = scripts[target_script_name]
+    # --- Start Processing Button ---
+    if st.button("🚀 Start Transliteration", type="primary"):
+        st.info("Processing your image... Please wait ⏳")
 
-    if uploaded_file:
-        st.markdown("---")
-        if st.button(" Run Transliteration", use_container_width=True, type="primary"):
-            st.subheader(" Results")
-            image_bytes = uploaded_file.getvalue()
+        # Step 1: OCR Extraction (lazy-loaded, cached)
+        with st.spinner("Initializing OCR model (first-time use may take 30–90s)..."):
+            ocr_result = detect_and_extract_text(image_bytes)
 
-            with st.spinner("Extracting text with EasyOCR..."):
-                ocr_result = detect_and_extract_text(image_bytes)
+        # Error handling
+        if not ocr_result or not ocr_result.get("full_text"):
+            st.error("❌ OCR failed or found no readable text in the image.")
+        else:
+            st.success("✅ Text extraction complete!")
 
-            if ocr_result["full_text"]:
-                st.success("✅ Text Extraction Successful")
-                st.code(ocr_result["full_text"], language="text")
+            st.subheader("🧾 Extracted Text:")
+            st.code(ocr_result["full_text"], language="text")
 
-                with st.spinner(f"Transliterating to {target_script_name}..."):
-                    trans_result = transliterate_text(ocr_result["full_text"], target_scheme)
+            # Step 2: Transliteration
+            with st.spinner(f"Transliterating to {target_lang}..."):
+                translit_result = transliterate_text(
+                    ocr_result["full_text"],
+                    TARGET_SCHEMES[target_lang]
+                )
 
-                if trans_result["error"] is None:
-                    st.success("✅ Transliteration Complete!")
-                    st.code(trans_result["result"], language="text")
-                    copy_button(trans_result["result"], "Copy Transliterated Text")
-                else:
-                    st.error(trans_result["error"])
+            if translit_result["error"]:
+                st.error(f"⚠️ Transliteration failed: {translit_result['error']}")
             else:
-                st.warning(ocr_result["lang_code"], icon="⚠️")
+                st.subheader(f"🌐 Transliterated Text ({target_lang}):")
+                st.code(translit_result["result"], language="text")
+
+                # Copy button (optional, if you added `streamlit-copy-button` in requirements)
+                try:
+                    from streamlit_copy_button import st_copy_button
+                    st_copy_button(translit_result["result"])
+                except Exception:
+                    pass
+
+else:
+    st.warning("📤 Please upload an image to begin.")
+
+# --- Footer ---
+st.markdown("---")
+st.caption(
+    "Built by Aditya Tiwari | Powered by EasyOCR, Streamlit & Indic Transliteration Library"
+)
