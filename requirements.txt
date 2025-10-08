@@ -1,6 +1,8 @@
-streamlit
-Pillow
-easyocr
-torch
-torchvision
-indic-transliteration
+streamlit==1.38.0
+easyocr==1.7.2
+Pillow==10.4.0
+indic-transliteration==2.4.0
+streamlit-copy-button==0.3.3
+requests==2.31.0
+torch==2.3.0
+torchvision==0.18.0

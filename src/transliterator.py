@@ -2,54 +2,52 @@
 # Core Logic using EasyOCR and Indic-Transliteration
 
 import easyocr
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import io
 from indic_transliteration import sanscript, detect
 from indic_transliteration.sanscript import transliterate
+import streamlit as st
 
-# This is a critical optimization:
-# The EasyOCR reader is initialized only ONCE when the app starts.
-# This avoids reloading the large model on every user interaction.
-try:
-    READER = easyocr.Reader(['en', 'hi'], gpu=False)
-except Exception as e:
-    # If initialization fails (e.g., on a resource-limited server),
-    # the READER will be None, and we can handle it gracefully.
-    print(f"Error initializing EasyOCR Reader: {e}")
-    READER = None
+@st.cache_resource(show_spinner=False)
+def load_ocr_reader():
+    """Loads EasyOCR model only once using Streamlit cache."""
+    try:
+        reader = easyocr.Reader(['en', 'hi'], gpu=False)
+        return reader
+    except Exception as e:
+        st.error(f"❌ Failed to initialize EasyOCR: {e}")
+        return None
 
 def detect_and_extract_text(image_bytes):
-    """Uses EasyOCR to extract all text from an image."""
-    if READER is None:
-        return {"full_text": None, "lang_code": "EasyOCR Engine Failed to Initialize"}
+    """Uses EasyOCR to extract text from an uploaded image."""
+    reader = load_ocr_reader()
+    if reader is None:
+        return {"full_text": None, "lang_code": "EasyOCR Engine Initialization Failed"}
 
     try:
         image = Image.open(io.BytesIO(image_bytes))
-        # detail=0 returns a list of strings, paragraph=True groups them.
-        results = READER.readtext(image, detail=0, paragraph=True)
+        image.verify()  # Check for file corruption
+        image = Image.open(io.BytesIO(image_bytes))  # Reopen for processing
+        
+        results = reader.readtext(image, detail=0, paragraph=True)
         full_text = "\n".join(results)
         
         return {
             "full_text": full_text.strip() if full_text else None,
             "lang_code": "EasyOCR (en, hi)"
         }
+
+    except UnidentifiedImageError:
+        return {"full_text": None, "lang_code": "Invalid File: Not an image format."}
     except Exception as e:
-        return {"full_text": None, "lang_code": f"OCR Runtime Error: {e}"}
+        return {"full_text": None, "lang_code": f"OCR Error: {e}"}
+
 
 def transliterate_text(text, target_scheme):
-    """Detects the source script and transliterates it to the target script."""
+    """Detects script and transliterates it into the target script."""
     try:
-        # Auto-detect the script of the extracted text
-        source_scheme = detect.detect(text)
-        # Default to Devanagari if detection is uncertain
-        if source_scheme is None:
-            source_scheme = sanscript.DEVANAGARI
-
-        transliterated_text = transliterate(
-            data=text,
-            _from=source_scheme,
-            _to=target_scheme
-        )
-        return {"result": transliterated_text, "error": None}
+        source_scheme = detect.detect(text) or sanscript.DEVANAGARI
+        transliterated = transliterate(text, _from=source_scheme, _to=target_scheme)
+        return {"result": transliterated, "error": None}
     except Exception as e:
-        return {"result": None, "error": f"Transliteration Logic Error: {e}"}
+        return {"result": None, "error": f"Transliteration Error: {e}"}

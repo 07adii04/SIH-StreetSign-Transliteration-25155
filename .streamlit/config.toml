@@ -1,4 +1,7 @@
-[server]
-# This limits the server to a single thread during build.
-# It prevents memory overload when installing large libraries like PyTorch.
-maxThreads = 1
+[theme]
+base="light"
+primaryColor="#2E86DE"
+backgroundColor="#FFFFFF"
+secondaryBackgroundColor="#F5F6FA"
+textColor="#2C3E50"
+font="sans serif"
